@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: signer
+  namespace: signer
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      serviceAccountName: eth-signer
+      imagePullSecrets:
+        - name: regcred
+      containers:
+      - name: app
+        image: docker.io/you/repo:dev
+        args:
+          - "--to=$(TO_ADDRESS)"
+          - "--amount=$(AMOUNT_ETH)"
+          - "--chain-id=$(CHAIN_ID)"
+          - "--kms-key-id=$(KMS_KEY_ID)"
+        env:
+          - name: RPC_URL
+            valueFrom:
+              secretKeyRef:
+                name: rpcurl
+                key: url

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: signer-config
+  namespace: signer
+data:
+  chainId: "11155111"
+  amountEth: "0.001"
+  toAddress: "0xCHANGE_ME"
+  kmsKeyId: "arn:aws:kms:REGION:ACCOUNT:key/KEY_ID"

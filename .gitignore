@@ -1,0 +1,289 @@
+# ==============================================
+# KMS-EKS Ethereum Signer Project .gitignore
+# ==============================================
+
+# ====================
+# Terraform Files
+# ====================
+
+# Local .terraform directories
+**/.terraform/*
+**/.terraform.lock.hcl
+
+# .tfstate files
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Crash log files
+crash.log
+crash.*.log
+
+# Exclude all .tfvars files, which are likely to contain sensitive data
+*.tfvars
+*.tfvars.json
+
+# Override files as they are usually used to override resources locally
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Include override files you do wish to add to version control using negated pattern
+# !example_override.tf
+
+# Include tfplan files to ignore the plan output of command: terraform plan -out=tfplan
+*tfplan*
+
+# Ignore CLI configuration files
+.terraformrc
+terraform.rc
+
+# ====================
+# AWS & Cloud Files
+# ====================
+
+# AWS credentials and config
+.aws/
+aws-exports.js
+
+# SOPS encrypted files (optional, uncomment if you don't want to track them)
+# *.enc
+# *.encrypted
+
+# ====================
+# Go Application Files
+# ====================
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+dist/
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Dependency directories
+vendor/
+
+# Go workspace file
+go.work
+
+# Air live reload
+tmp/
+
+# ====================
+# Kubernetes Files
+# ====================
+
+# Helm charts
+charts/
+*.tgz
+
+# Kustomize build output
+kustomization-*.yaml
+
+# Temporary kubectl files
+kubectl-*
+
+# ====================
+# Docker Files
+# ====================
+
+# Docker build context files
+.dockerignore.bak
+
+# ====================
+# IDE & Editor Files
+# ====================
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# ====================
+# OS Generated Files
+# ====================
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# ====================
+# Logs and Temporary Files
+# ====================
+
+# Log files
+*.log
+logs/
+log/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Temporary directories
+tmp/
+temp/
+.tmp/
+
+# ====================
+# Security & Secrets
+# ====================
+
+# Environment files with secrets
+.env
+.env.local
+.env.*.local
+
+# SSL certificates
+*.pem
+*.key
+*.crt
+*.csr
+*.p12
+*.pfx
+
+# SSH keys
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+*.pub
+
+# GPG keys
+*.gpg
+*.asc
+
+# ====================
+# Build and Cache Files
+# ====================
+
+# Node.js (if any frontend components)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python (if any scripts)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# Ruby (if any scripts)
+*.gem
+*.rbc
+/.config
+/coverage/
+/InstalledFiles
+/pkg/
+/spec/reports/
+/spec/examples.txt
+/test/tmp/
+/test/version_tmp/
+/tmp/
+
+# ====================
+# Project Specific
+# ====================
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Archive files
+*.zip
+*.tar.gz
+*.rar
+
+# Documentation builds
+docs/_build/
+site/
+
+# Coverage reports
+coverage/
+*.coverage
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# ====================
+# Optional: Uncomment sections below if needed
+# ====================
+
+# # Ignore terraform state bucket names (if generated dynamically)
+# terraform-state-bucket-*
+# 
+# # Ignore kubeconfig files
+# kubeconfig*
+# config
+# 
+# # Ignore helm values files with secrets
+# values-*.yaml
+# 
+# # Ignore generated manifests
+# generated/
+# output/ 

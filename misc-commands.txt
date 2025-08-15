@@ -1,0 +1,34 @@
+# Install/upgrade CLI tools on macOS:
+# Ensure Homebrew is current
+brew update
+
+# Core CLIs
+brew list --versions awscli >/dev/null 2>&1 && brew upgrade awscli || brew install awscli
+brew list --versions terraform >/dev/null 2>&1 && brew upgrade terraform || brew install terraform
+brew list --versions kubectl >/dev/null 2>&1 && brew upgrade kubectl || brew install kubectl
+brew list --versions kustomize >/dev/null 2>&1 && brew upgrade kustomize || brew install kustomize
+brew list --versions sops >/dev/null 2>&1 && brew upgrade sops || brew install sops
+brew list --versions age >/dev/null 2>&1 && brew upgrade age || brew install age
+brew list --versions jq >/dev/null 2>&1 && brew upgrade jq || brew install jq
+brew list --versions yq >/dev/null 2>&1 && brew upgrade yq || brew install yq
+
+# Go toolchain
+brew list --versions go >/dev/null 2>&1 && brew upgrade go || brew install go
+
+# Docker Desktop (cask)
+brew list --cask --versions docker >/dev/null 2>&1 && brew upgrade --cask docker || brew install --cask docker
+
+# Optional but handy
+brew list --versions tflint >/dev/null 2>&1 && brew upgrade tflint || brew install tflint
+brew list --versions tfsec >/dev/null 2>&1 && brew upgrade tfsec || brew install tfsec
+brew list --versions kubectx >/dev/null 2>&1 && brew upgrade kubectx || brew install kubectx
+
+# Checks:
+terraform -version
+aws --version
+kubectl version --client=true --output=yaml
+kustomize version
+sops --version
+age --version
+go version
+docker --version

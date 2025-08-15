@@ -1,0 +1,24 @@
+---
+
+Hey Cyril,
+Hope you had a great holiday!
+
+The task requires you to demonstrate your ability to deploy a secure Ethereum transaction signer to AWS using DevOps practices.
+
+Your challenge, if you accept, is to set up an AWS KMS key able to sign Ethereum transactions and use it from an application running in an EKS cluster. The goal is simply to achieve a secure fund transfer from a wallet for which the private key is stored in AWS KMS.
+
+You may use any signer tool that support the KMS ethereum signer and refer to this guide:
+https://aws.amazon.com/blogs/web3/import-ethereum-private-keys-to-aws-kms/
+
+In addition to setting up the cluster, you will need to automate this deployment using Infrastructure as Code (IaC) tools like Terraform, Pulumi or Crossplane. It should be modular, scalable, and easy to extend.
+
+For submission, you will need to provide:
+
+A Git repository containing all the source code, scripts, and configuration files.
+Include detailed documentation explaining the setup process, architecture, and optionally monitoring setup.
+Optionally, a short video presentation that walks through your setup, explains the architecture, and demonstrates the token transfer using AWS KMS.
+A report (max 2-3 pages) explaining your approach, your other ideas, what went well or not, etc...
+The goal of this challenge is to evaluate your Cloud Engineering skills, if at any point you are struggling with the web3 part of the challenge, don't hesitate to show us what you have attempted and where you are stuck.
+
+
+--- 
