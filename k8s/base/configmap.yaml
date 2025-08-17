@@ -4,7 +4,7 @@ metadata:
   name: signer-config
   namespace: signer
 data:
-  chainId: "11155111"
-  amountEth: "0.001"
-  toAddress: "0xCHANGE_ME"
-  kmsKeyId: "arn:aws:kms:eu-west-1:905418421784:key/241cab65-63b1-4f3a-9002-0bc6b8ee4582"
+  CHAIN_ID: "11155111"
+  AMOUNT_ETH: "0.001"
+  TO_ADDRESS: "0xCHANGE_ME"
+  KMS_KEY_ID: "arn:aws:kms:eu-west-1:905418421784:key/241cab65-63b1-4f3a-9002-0bc6b8ee4582"
