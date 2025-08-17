@@ -3,8 +3,8 @@ data "aws_partition" "current" {}
 
 # KMS key for Ethereum secp256k1 signing
 resource "aws_kms_key" "this" {
-  description             = "Ethereum signing key (secp256k1) for on-chain tx via AWS KMS"
-  key_usage               = "SIGN_VERIFY"
+  description              = "Ethereum signing key (secp256k1) for on-chain tx via AWS KMS"
+  key_usage                = "SIGN_VERIFY"
   customer_master_key_spec = "ECC_SECG_P256K1"
 
   # As of today, KMS does NOT support automatic rotation for asymmetric keys.
@@ -13,32 +13,33 @@ resource "aws_kms_key" "this" {
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = compact([
+    Statement = concat([
       # Allow full control to account root (enables IAM policies to work)
       {
-        Sid      = "EnableRootPermissions"
-        Effect   = "Allow"
+        Sid    = "EnableRootPermissions"
+        Effect = "Allow"
         Principal = {
           AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
         }
         Action   = "kms:*"
         Resource = "*"
-      },
+      }
+    ], length(var.kms_admin_arns) > 0 ? [
       # Optional: additional admins you pass in
-      length(var.kms_admin_arns) > 0 ? {
-        Sid      = "KeyAdmins"
-        Effect   = "Allow"
+      {
+        Sid    = "KeyAdmins"
+        Effect = "Allow"
         Principal = {
           AWS = var.kms_admin_arns
         }
         Action = [
-          "kms:Create*","kms:Describe*","kms:Enable*","kms:List*","kms:Put*","kms:Update*",
-          "kms:Revoke*","kms:Disable*","kms:Get*","kms:Delete*","kms:TagResource","kms:UntagResource",
-          "kms:ScheduleKeyDeletion","kms:CancelKeyDeletion"
+          "kms:Create*", "kms:Describe*", "kms:Enable*", "kms:List*", "kms:Put*", "kms:Update*",
+          "kms:Revoke*", "kms:Disable*", "kms:Get*", "kms:Delete*", "kms:TagResource", "kms:UntagResource",
+          "kms:ScheduleKeyDeletion", "kms:CancelKeyDeletion"
         ]
         Resource = "*"
-      } : null,
-    ])
+      }
+    ] : [])
   })
 
   tags = var.tags

@@ -23,6 +23,10 @@ crash.*.log
 *.tfvars
 *.tfvars.json
 
+# Exception: Allow environment-specific tfvars (these contain non-sensitive config)
+!terraform/envs/*/dev.tfvars
+!terraform/envs/*/prod.tfvars
+
 # Override files as they are usually used to override resources locally
 override.tf
 override.tf.json

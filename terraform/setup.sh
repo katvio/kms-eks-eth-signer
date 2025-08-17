@@ -103,7 +103,7 @@ if [ -d "terraform/stacks/vpc" ]; then
     cd terraform/stacks/vpc
     terraform init -reconfigure \
       -backend-config="bucket=$TF_STATE_BUCKET" \
-      -backend-config="key=terraform/states/dev/vpc.tfstate" \
+      -backend-config="key=terraform/states/prod/vpc.tfstate" \
       -backend-config="region=$AWS_REGION" \
       -backend-config="dynamodb_table=$TF_LOCK_TABLE" \
       -backend-config="encrypt=true"
@@ -118,7 +118,7 @@ if [ -d "terraform/stacks/kms" ]; then
     cd terraform/stacks/kms
     terraform init -reconfigure \
       -backend-config="bucket=$TF_STATE_BUCKET" \
-      -backend-config="key=terraform/states/dev/kms.tfstate" \
+      -backend-config="key=terraform/states/prod/kms.tfstate" \
       -backend-config="region=$AWS_REGION" \
       -backend-config="dynamodb_table=$TF_LOCK_TABLE" \
       -backend-config="encrypt=true"
@@ -133,7 +133,7 @@ if [ -d "terraform/stacks/eks" ]; then
     cd terraform/stacks/eks
     terraform init -reconfigure \
       -backend-config="bucket=$TF_STATE_BUCKET" \
-      -backend-config="key=terraform/states/dev/eks.tfstate" \
+      -backend-config="key=terraform/states/prod/eks.tfstate" \
       -backend-config="region=$AWS_REGION" \
       -backend-config="dynamodb_table=$TF_LOCK_TABLE" \
       -backend-config="encrypt=true"
@@ -148,7 +148,7 @@ if [ -d "terraform/stacks/irsa" ]; then
     cd terraform/stacks/irsa
     terraform init -reconfigure \
       -backend-config="bucket=$TF_STATE_BUCKET" \
-      -backend-config="key=terraform/states/dev/irsa.tfstate" \
+      -backend-config="key=terraform/states/prod/irsa.tfstate" \
       -backend-config="region=$AWS_REGION" \
       -backend-config="dynamodb_table=$TF_LOCK_TABLE" \
       -backend-config="encrypt=true"
@@ -163,7 +163,7 @@ if [ -d "terraform/stacks/ecr" ]; then
     cd terraform/stacks/ecr
     terraform init -reconfigure \
       -backend-config="bucket=$TF_STATE_BUCKET" \
-      -backend-config="key=terraform/states/dev/ecr.tfstate" \
+      -backend-config="key=terraform/states/prod/ecr.tfstate" \
       -backend-config="region=$AWS_REGION" \
       -backend-config="dynamodb_table=$TF_LOCK_TABLE" \
       -backend-config="encrypt=true"
@@ -178,7 +178,7 @@ if [ -d "terraform/stacks/observability" ]; then
     cd terraform/stacks/observability
     terraform init -reconfigure \
       -backend-config="bucket=$TF_STATE_BUCKET" \
-      -backend-config="key=terraform/states/dev/observability.tfstate" \
+      -backend-config="key=terraform/states/prod/observability.tfstate" \
       -backend-config="region=$AWS_REGION" \
       -backend-config="dynamodb_table=$TF_LOCK_TABLE" \
       -backend-config="encrypt=true"

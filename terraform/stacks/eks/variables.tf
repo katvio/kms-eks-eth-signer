@@ -33,6 +33,12 @@ variable "cluster_version" {
   default     = "1.28"
 }
 
+variable "cluster_endpoint_public_access_cidrs" {
+  description = "List of CIDR blocks that can access the EKS cluster endpoint"
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+}
+
 variable "node_group_min_size" {
   description = "Minimum number of nodes in the managed node group"
   type        = number

@@ -38,7 +38,15 @@ module "eks" {
 
   enable_irsa = true
 
+  # API endpoint access configuration
+  cluster_endpoint_private_access = true
+  cluster_endpoint_public_access  = true
+  cluster_endpoint_public_access_cidrs = var.cluster_endpoint_public_access_cidrs
+
   cluster_enabled_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
+
+  # Enable cluster creator admin permissions (this grants access to the user who created the cluster)
+  enable_cluster_creator_admin_permissions = true
 
   # EKS Managed Node Groups
   eks_managed_node_groups = {

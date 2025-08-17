@@ -8,6 +8,11 @@ output "key_arn" {
   description = "KMS Key ARN"
 }
 
+output "alias_name" {
+  value       = aws_kms_alias.this.name
+  description = "KMS Alias name (with alias/ prefix)"
+}
+
 output "alias_arn" {
   value       = aws_kms_alias.this.arn
   description = "KMS Alias ARN"
