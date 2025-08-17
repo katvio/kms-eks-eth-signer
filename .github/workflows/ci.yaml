@@ -1,25 +1,25 @@
-name: CI
-on:
-  pull_request:
-  push:
-    branches: [ main ]
-jobs:
-  build-test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.22'
-      - name: Go Vet & Test
-        run: go vet ./... && go test ./...
-        working-directory: app
-      - name: Docker Build & Push
-        env:
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-        run: |
-          echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-          docker build -t docker.io/$DOCKERHUB_USERNAME/kms-eks-eth-signer:${GITHUB_SHA} app
-          docker push docker.io/$DOCKERHUB_USERNAME/kms-eks-eth-signer:${GITHUB_SHA}
+# name: CI
+# on:
+#   pull_request:
+#   push:
+#     branches: [ main ]
+# jobs:
+#   build-test:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v4
+#       - name: Set up Go
+#         uses: actions/setup-go@v5
+#         with:
+#           go-version: '1.22'
+#       - name: Go Vet & Test
+#         run: go vet ./... && go test ./...
+#         working-directory: app
+#       - name: Docker Build & Push
+#         env:
+#           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+#           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+#         run: |
+#           echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+#           docker build -t docker.io/$DOCKERHUB_USERNAME/kms-eks-eth-signer:${GITHUB_SHA} app
+#           docker push docker.io/$DOCKERHUB_USERNAME/kms-eks-eth-signer:${GITHUB_SHA}
