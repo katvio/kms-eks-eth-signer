@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"math/big"
 	"os"
@@ -10,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
-	ethkms "github.com/matelang/go-ethereum-aws-kms-tx-signer"
+	ethkms "github.com/welthee/go-ethereum-aws-kms-tx-signer/v2"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -60,7 +59,7 @@ func main() {
 	log.Printf("Amount: %f ETH", amountEth)
 	log.Printf("To Address: %s", toAddr)
 	log.Printf("KMS Key ID: %s", kmsKeyID)
-	log.Printf("RPC URL: %s", rpcURL[:50]+"...") // Log only first 50 chars for security
+	log.Printf("RPC URL: %s", rpcURL[:min(50, len(rpcURL))]+"...") // Log only first 50 chars for security
 
 	// Initialize AWS KMS client
 	cfg, err := config.LoadDefaultConfig(context.Background())
@@ -113,10 +112,11 @@ func main() {
 		gasLimit)
 
 	// Create EIP-1559 transaction
+	toAddress := common.HexToAddress(toAddr)
 	tx := types.NewTx(&types.DynamicFeeTx{
 		ChainID:   big.NewInt(chainID),
 		Nonce:     nonce,
-		To:        common.HexToAddress(toAddr).Ptr(),
+		To:        &toAddress,
 		Value:     value,
 		Gas:       gasLimit,
 		GasTipCap: tipCap,
@@ -138,4 +138,12 @@ func main() {
 	log.Printf("✅ Transaction sent successfully!")
 	log.Printf("Transaction hash: %s", signedTx.Hash().Hex())
 	log.Printf("View on Etherscan: https://sepolia.etherscan.io/tx/%s", signedTx.Hash().Hex())
+}
+
+// min function for Go versions that don't have it built-in
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
