@@ -20,7 +20,7 @@ kms-eks-eth-signer/
 │       ├── cd.yaml                       # Continuous Deployment
 │       └── ci.yaml                       # Continuous Integration
 ├── .sops.yaml                            # SOPS encryption configuration
-├── app/                                  # Ethereum Signer Application
+├── go-signer-app/                                  # Ethereum Signer Application
 │   ├── cmd/
 │   │   └── transfer/
 │   │       └── main.go                   # Main transfer application
@@ -145,8 +145,14 @@ kms-eks-eth-signer/
 
 ## Phase 2 — Build & push the app (Docker Hub)
 
-1. Build image: `docker build -t docker.io/<user>/kms-eks-eth-signer:<tag> ./app`  
-2. Login & push: `echo "$DOCKERHUB_TOKEN" | docker login -u "<user>" --password-stdin` → `docker push …`  
+cd /Users/cyrb/pro_wks/kms-eks-eth-signer/app
+
+# Build for x86_64 (AMD64) architecture specifically
+docker buildx build --platform linux/amd64 -t docker.io/flentier/eth-go-signer:amd64 .
+
+# Push the new image
+docker push docker.io/flentier/eth-go-signer:amd64
+
 3. In Kustomize, set the image reference to the pushed `<tag>`.
 
 ---
@@ -169,16 +175,15 @@ kms-eks-eth-signer/
 3. Deploy (decrypt on the fly):
    ```bash
    export AGE_SECRET_KEY="$(cat ~/.age/key.txt)"
-   kustomize build k8s/overlays/dev | sops -d /dev/stdin | kubectl apply -f -
+   kustomize build k8s/overlays/prod |  kubectl apply -f -
    kubectl -n signer get pods
    ```
 4. **Trigger model (no API):**
    - **Create a new Job name each time** (recommended):
      ```bash
      JOB=signer-$(date +%s)
-     kustomize build k8s/overlays/dev \
+     kustomize build k8s/overlays/prod \
      | sed "s/name: signer/name: ${JOB}/" \
-     | sops -d /dev/stdin \
      | kubectl apply -f -
 
      kubectl -n signer logs job/${JOB} -f
@@ -186,7 +191,7 @@ kms-eks-eth-signer/
    - **Or re‑create the same Job** (delete & re‑apply):
      ```bash
      kubectl -n signer delete job/signer --ignore-not-found
-     kustomize build k8s/overlays/dev | sops -d /dev/stdin | kubectl apply -f -
+     kustomize build k8s/overlays/prod | kubectl apply -f -
      kubectl -n signer logs job/signer -f
      ```
 
@@ -205,7 +210,7 @@ kms-eks-eth-signer/
   - For each stack (`vpc`, `eks`, `kms`, `irsa`): `terraform init -reconfigure` with that stack’s **key** → `terraform apply` with `dev.tfvars`.
   - Update kubeconfig; deploy with Kustomize + SOPS:
     ```bash
-    kustomize build k8s/overlays/dev | sops -d /dev/stdin | kubectl apply -f -
+    kustomize build k8s/overlays/prod | kubectl apply -f -
     ```
   - Image pinning: set overlay image tag to `${{ github.sha }}` before apply.
 
