@@ -45,12 +45,6 @@ jobs:
       run: |
         enclaver build
         
-    - name: Extract PCR measurements
-      run: |
-        echo "=== Enclave Measurements ==="
-        enclaver describe eth-go-signer:enclave-latest
-        echo "=========================="
-        
     - name: Tag and push images
       run: |
         # Get short git commit hash
