@@ -33,6 +33,11 @@ data "terraform_remote_state" "kms" {
   }
 }
 
+# Local to determine which KMS key ARN to use
+locals {
+  kms_key_arn = var.byok_kms_key_arn != "" ? var.byok_kms_key_arn : data.terraform_remote_state.kms.outputs.key_arn
+}
+
 ############################
 # IRSA role for signer SA
 ############################
@@ -46,7 +51,7 @@ module "iam_irsa" {
   service_account_name  = var.k8s_service_account
   role_name             = "${var.name_prefix}-irsa"
 
-  kms_key_arn = data.terraform_remote_state.kms.outputs.key_arn
+  kms_key_arn = local.kms_key_arn
 
   tags = {
     Project     = var.name_prefix

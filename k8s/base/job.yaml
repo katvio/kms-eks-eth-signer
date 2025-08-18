@@ -13,15 +13,30 @@ spec:
         - name: regcred
       containers:
       - name: app
-        image: docker.io/you/repo:dev
-        args:
-          - "--to=$(TO_ADDRESS)"
-          - "--amount=$(AMOUNT_ETH)"
-          - "--chain-id=$(CHAIN_ID)"
-          - "--kms-key-id=$(KMS_KEY_ID)"
+        image: docker.io/flentier/eth-go-signer:latest
         env:
-          - name: RPC_URL
-            valueFrom:
-              secretKeyRef:
-                name: rpcurl
-                key: url
+        - name: TO_ADDRESS
+          valueFrom:
+            configMapKeyRef:
+              name: signer-config
+              key: TO_ADDRESS
+        - name: AMOUNT_ETH
+          valueFrom:
+            configMapKeyRef:
+              name: signer-config
+              key: AMOUNT_ETH
+        - name: CHAIN_ID
+          valueFrom:
+            configMapKeyRef:
+              name: signer-config
+              key: CHAIN_ID
+        - name: KMS_KEY_ID
+          valueFrom:
+            configMapKeyRef:
+              name: signer-config
+              key: KMS_KEY_ID
+        - name: RPC_URL
+          valueFrom:
+            secretKeyRef:
+              name: rpcurl
+              key: RPC_URL

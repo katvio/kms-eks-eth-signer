@@ -9,5 +9,5 @@ resources:
   - secret.rpcurl.yaml
   - secret.docker.yaml
 images:
-  - name: docker.io/you/repo
-    newTag: dev
+  - name: docker.io/flentier/eth-go-signer
+    newTag: latest

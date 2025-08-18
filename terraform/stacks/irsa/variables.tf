@@ -122,4 +122,11 @@ variable "kms_admin_arns" {
   description = "KMS admin ARNs"
   type        = list(string)
   default     = []
+}
+
+# BYOK override variable
+variable "byok_kms_key_arn" {
+  description = "Override KMS key ARN for BYOK scenarios (optional)"
+  type        = string
+  default     = ""
 } 

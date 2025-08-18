@@ -6,5 +6,5 @@ metadata:
 data:
   CHAIN_ID: "11155111"
   AMOUNT_ETH: "0.001"
-  TO_ADDRESS: "0xCHANGE_ME"
-  KMS_KEY_ID: "arn:aws:kms:eu-west-1:905418421784:key/241cab65-63b1-4f3a-9002-0bc6b8ee4582"
+  TO_ADDRESS: "0x345B109daD0264B37A2a133ea3027e4aB120f294"
+  KMS_KEY_ID: "arn:aws:kms:eu-west-1:905418421784:key/9f0d8cbe-4ded-480e-9400-d0cd8802048a"

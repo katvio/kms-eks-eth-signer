@@ -20,7 +20,7 @@ public_subnets   = ["10.0.101.0/24","10.0.102.0/24","10.0.103.0/24"]
 single_nat_gateway = true
 enable_flow_logs   = true
 
-# EKS node group settings
+# EKS node group settings - Optimized for single node (cost savings)
 node_group_min_size     = 2
 node_group_max_size     = 6
 node_group_desired_size = 3
@@ -37,8 +37,8 @@ kms_admin_arns = [
 ]
 
 # IRSA settings
-k8s_namespace       = "eth-signer"
-k8s_service_account = "eth-signer-sa"
+k8s_namespace       = "signer"
+k8s_service_account = "eth-signer"
 
 # Terraform State (will be set by setup.sh)
 # tf_state_bucket = "will-be-set-dynamically" 

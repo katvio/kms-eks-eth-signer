@@ -103,7 +103,22 @@ func main() {
 
 	// EIP-1559 transaction parameters
 	tipCap := big.NewInt(2_000_000_000)   // 2 gwei tip
-	feeCap := new(big.Int).Mul(gasPrice, big.NewInt(2)) // 2x current gas price
+	
+	// Ensure feeCap is always higher than tipCap
+	minFeeCap := big.NewInt(10_000_000_000) // 10 gwei minimum
+	suggestedFeeCap := new(big.Int).Mul(gasPrice, big.NewInt(2)) // 2x current gas price
+	
+	// Use the higher of: minimum fee cap, suggested fee cap, or tip + 5 gwei
+	feeCap := minFeeCap
+	if suggestedFeeCap.Cmp(feeCap) > 0 {
+		feeCap = suggestedFeeCap
+	}
+	// Ensure feeCap is at least tipCap + 5 gwei
+	minFeeCapWithTip := new(big.Int).Add(tipCap, big.NewInt(5_000_000_000))
+	if feeCap.Cmp(minFeeCapWithTip) < 0 {
+		feeCap = minFeeCapWithTip
+	}
+
 	gasLimit := uint64(21000) // Standard ETH transfer
 
 	log.Printf("Gas parameters - Tip: %s gwei, Fee Cap: %s gwei, Limit: %d", 
