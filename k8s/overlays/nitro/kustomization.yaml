@@ -1,0 +1,29 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Only include the base namespace, configmap, secrets, and serviceaccount
+resources:
+- ../../base/namespace.yaml
+- ../../base/configmap.yaml
+- ../../base/secret.docker.yaml
+- ../../base/secret.rpcurl.yaml
+- ../../base/serviceaccount.yaml
+- job-nitro.yaml
+
+# Set namespace
+namespace: signer
+
+# Common labels for all resources
+labels:
+- pairs:
+    deployment-type: nitro-enclaves
+    security-level: hardware-attested
+
+# Image transformations
+images:
+- name: cyrbthomas/kms-eth-signer
+  newName: docker.io/flentier/eth-go-signer
+  newTag: enclave-latest
+
+# Resource name prefix
+namePrefix: nitro- 

@@ -1,0 +1,178 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Add Nitro Enclave Node Group to kms-eks-eth-prod EKS cluster
+
+Parameters:
+  ClusterName:
+    Type: String
+    Description: Name of your existing EKS cluster
+    Default: "kms-eks-eth-prod"
+  
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: Private subnets for the node group
+    
+  NodeGroupName:
+    Type: String
+    Description: Name for the node group
+    Default: "nitro-enclaves"
+    
+  InstanceType:
+    Type: String
+    Description: EC2 instance type for Nitro Enclaves
+    Default: "c6a.xlarge"
+    AllowedValues:
+      - "c6a.xlarge"
+      - "c6a.2xlarge"
+      - "m6a.xlarge"
+      - "m6a.2xlarge"
+      
+  MinSize:
+    Type: Number
+    Description: Minimum number of nodes
+    Default: 0
+    
+  DesiredSize:
+    Type: Number
+    Description: Desired number of nodes
+    Default: 1
+    
+  MaxSize:
+    Type: Number
+    Description: Maximum number of nodes
+    Default: 3
+
+Resources:
+  # Launch Template for Nitro Enclaves
+  NitroEnclavesLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: !Sub "${ClusterName}-nitro-enclaves-template"
+      LaunchTemplateData:
+        MetadataOptions:
+          HttpPutResponseHopLimit: 2  # Required for Docker bridge
+          HttpTokens: required
+          InstanceMetadataTags: enabled
+        EnclaveOptions:
+          Enabled: true
+        UserData:
+          Fn::Base64: 
+            !Sub |
+              MIME-Version: 1.0
+              Content-Type: multipart/mixed; boundary="==NITRO_ENCLAVES=="
+
+              --==NITRO_ENCLAVES==
+              Content-Type: text/x-shellscript; charset="us-ascii"
+
+              #!/bin/bash
+              set -e
+              
+              # Log all output
+              exec > >(tee /var/log/nitro-enclaves-setup.log)
+              exec 2>&1
+              
+              echo "Starting Nitro Enclaves setup at $(date)"
+              
+              # Install Nitro Enclaves CLI
+              amazon-linux-extras install aws-nitro-enclaves-cli -y
+              yum install aws-nitro-enclaves-cli-devel -y
+              
+              # Configure users
+              usermod -aG ne ec2-user
+              usermod -aG docker ec2-user
+              
+              # Configure Nitro Enclaves allocator
+              sed -i 's/memory_mib: 512/memory_mib: 3072/g' /etc/nitro_enclaves/allocator.yaml
+              sed -i 's/cpu_count: 2/cpu_count: 1/g' /etc/nitro_enclaves/allocator.yaml
+              
+              # Start services
+              systemctl start nitro-enclaves-allocator.service
+              systemctl enable nitro-enclaves-allocator.service
+              systemctl start docker
+              systemctl enable docker
+              
+              # Configure hugepages
+              echo 'vm.nr_hugepages = 1536' >> /etc/sysctl.conf
+              sysctl -p
+              mkdir -p /dev/hugepages-1Gi
+              mount -t hugetlbfs -o pagesize=1G none /dev/hugepages-1Gi
+              echo 'none /dev/hugepages-1Gi hugetlbfs pagesize=1G 0 0' >> /etc/fstab
+              
+              echo "Nitro Enclaves setup completed at $(date)"
+
+              --==NITRO_ENCLAVES==--
+
+  # IAM Role for Nitro Enclaves nodes
+  NitroEnclavesNodeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${ClusterName}-nitro-enclaves-node-role"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+        - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+      Policies:
+        - PolicyName: NitroEnclavesKMSAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'kms:Decrypt'
+                  - 'kms:DescribeKey'
+                  - 'kms:Sign'
+                  - 'kms:GetPublicKey'
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    'kms:ViaService': !Sub 'kms.${AWS::Region}.amazonaws.com'
+
+  # EKS Node Group
+  NitroEnclavesNodeGroup:
+    Type: AWS::EKS::Nodegroup
+    Properties:
+      ClusterName: !Ref ClusterName
+      NodegroupName: !Ref NodeGroupName
+      NodeRole: !GetAtt NitroEnclavesNodeRole.Arn
+      Subnets: !Ref SubnetIds
+      InstanceTypes:
+        - !Ref InstanceType
+      CapacityType: ON_DEMAND
+      AmiType: AL2_x86_64
+      ScalingConfig:
+        MinSize: !Ref MinSize
+        DesiredSize: !Ref DesiredSize
+        MaxSize: !Ref MaxSize
+      LaunchTemplate:
+        Id: !Ref NitroEnclavesLaunchTemplate
+        Version: !GetAtt NitroEnclavesLaunchTemplate.LatestVersionNumber
+      Labels:
+        edgebit.io/enclave: nitro
+        node-type: nitro-enclaves
+      Taints:
+        - Key: edgebit.io/enclave
+          Value: nitro
+          Effect: NO_SCHEDULE
+      Tags:
+        Project: kms-eks-eth-prod
+        Environment: prod
+        Component: nitro-enclaves
+
+Outputs:
+  NodeGroupName:
+    Description: Name of the created node group
+    Value: !Ref NitroEnclavesNodeGroup
+    
+  NodeGroupArn:
+    Description: ARN of the created node group
+    Value: !Sub "arn:aws:eks:${AWS::Region}:${AWS::AccountId}:nodegroup/${ClusterName}/${NitroEnclavesNodeGroup}/*"
+    
+  LaunchTemplateId:
+    Description: ID of the launch template
+    Value: !Ref NitroEnclavesLaunchTemplate 

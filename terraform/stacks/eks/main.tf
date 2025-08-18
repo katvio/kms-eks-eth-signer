@@ -23,6 +23,21 @@ data "terraform_remote_state" "vpc" {
   }
 }
 
+
+
+# Get the latest EKS optimized AMI
+data "aws_ami" "eks_default" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amazon-eks-node-${var.cluster_version}-v*"]
+  }
+}
+
+
+
 ############################
 # EKS Cluster
 ############################
@@ -50,6 +65,7 @@ module "eks" {
 
   # EKS Managed Node Groups
   eks_managed_node_groups = {
+    # Default node group for regular workloads
     default = {
       min_size     = var.node_group_min_size
       max_size     = var.node_group_max_size
@@ -65,6 +81,8 @@ module "eks" {
         AmazonEC2ContainerRegistryReadOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
       }
     }
+
+
   }
 
   tags = {

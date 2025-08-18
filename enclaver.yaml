@@ -1,0 +1,26 @@
+version: v1
+name: "eth-go-signer"
+target: "eth-go-signer:enclave-latest"
+
+sources:
+  app: "eth-go-signer:latest"
+
+# Enable KMS proxy for attestation-based access
+kms_proxy:
+  listen_port: 9999
+
+# Network egress configuration
+egress:
+  allow:
+    # AWS metadata service (required for IAM credentials)
+    - 169.254.169.254
+    
+    # AWS KMS endpoints (all regions)
+    - kms.*.amazonaws.com
+    
+    # Ethereum RPC providers (adjust based on your needs)
+    - ethereum-sepolia.core.chainstack.com
+# Default resource allocation (can be overridden in Kubernetes)
+defaults:
+  memory_mb: 1024  # 1GB memory (minimum 512MB)
+  cpu_count: 1     # Single CPU core 

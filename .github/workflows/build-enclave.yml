@@ -1,0 +1,79 @@
+name: Build Nitro Enclave Image
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths: 
+      - 'go-signer-app/**'
+      - 'enclaver.yaml'
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: flentier/eth-go-signer
+
+jobs:
+  build-enclave:
+    runs-on: ubuntu-latest  # x86_64 architecture
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: flentier
+        password: ${{ secrets.DOCKER_HUB_TOKEN }}
+    
+    - name: Build base Go application image
+      run: |
+        docker build --platform linux/amd64 -t eth-go-signer:latest ./go-signer-app
+        
+    - name: Download and setup Enclaver
+      run: |
+        curl -L https://github.com/enclaver-io/enclaver/releases/download/v0.5.0/enclaver-linux-x86_64-v0.5.0.tar.gz -o enclaver.tar.gz
+        tar -xzf enclaver.tar.gz
+        sudo install enclaver-linux-x86_64-v*/enclaver /usr/local/bin/
+        enclaver --version
+        
+    - name: Build enclave image
+      run: |
+        enclaver build
+        
+    - name: Extract PCR measurements
+      run: |
+        echo "=== Enclave Measurements ==="
+        enclaver describe eth-go-signer:enclave-latest
+        echo "=========================="
+        
+    - name: Tag and push images
+      run: |
+        # Get short git commit hash
+        export GIT_SHA=$(git rev-parse --short HEAD)
+        echo "Using git SHA as tag: $GIT_SHA"
+        
+        # Tag and push base image
+        docker tag eth-go-signer:latest ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+        docker tag eth-go-signer:latest ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$GIT_SHA
+        docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+        docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$GIT_SHA
+        
+        # Tag and push enclave image with git SHA
+        docker tag eth-go-signer:enclave-latest ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:enclave-$GIT_SHA
+        docker tag eth-go-signer:enclave-latest ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:enclave-latest
+        docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:enclave-$GIT_SHA
+        docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:enclave-latest
+        
+        echo "Images pushed:"
+        echo "- ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
+        echo "- ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$GIT_SHA"
+        echo "- ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:enclave-latest"
+        echo "- ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:enclave-$GIT_SHA"
+        
+        # Output the git SHA for use in Kubernetes deployment
+        echo "::notice title=Git SHA Tag::enclave-$GIT_SHA" 

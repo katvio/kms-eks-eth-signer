@@ -71,4 +71,46 @@ variable "node_capacity_type" {
     condition     = contains(["ON_DEMAND", "SPOT"], var.node_capacity_type)
     error_message = "Capacity type must be either ON_DEMAND or SPOT."
   }
+}
+
+############################
+# Nitro Enclaves Variables
+############################
+
+variable "nitro_node_group_min_size" {
+  description = "Minimum number of nodes in the Nitro Enclaves node group"
+  type        = number
+  default     = 0
+}
+
+variable "nitro_node_group_max_size" {
+  description = "Maximum number of nodes in the Nitro Enclaves node group"
+  type        = number
+  default     = 2
+}
+
+variable "nitro_node_group_desired_size" {
+  description = "Desired number of nodes in the Nitro Enclaves node group"
+  type        = number
+  default     = 1
+}
+
+variable "nitro_instance_types" {
+  description = "List of Nitro Enclaves compatible instance types"
+  type        = list(string)
+  default     = ["c6a.xlarge", "c6a.2xlarge", "m6a.xlarge"]
+  
+  validation {
+    condition = alltrue([
+      for instance_type in var.nitro_instance_types :
+      can(regex("^(c6a|c6i|c7a|c7i|m6a|m6i|m7a|m7i|r6a|r6i|r7a|r7i)", instance_type))
+    ])
+    error_message = "Instance types must be Nitro Enclaves compatible (c6a, c6i, c7a, c7i, m6a, m6i, m7a, m7i, r6a, r6i, r7a, r7i series)."
+  }
+}
+
+variable "enable_nitro_enclaves" {
+  description = "Enable Nitro Enclaves node group"
+  type        = bool
+  default     = true
 } 

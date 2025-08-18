@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: hugepages-setup
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      name: hugepages-setup
+  template:
+    metadata:
+      labels:
+        name: hugepages-setup
+    spec:
+      nodeSelector:
+        edgebit.io/enclave: nitro
+      tolerations:
+      - key: edgebit.io/enclave
+        operator: Equal
+        value: nitro
+        effect: NoSchedule
+      hostPID: true
+      hostNetwork: true
+      containers:
+      - name: hugepages-setup
+        image: alpine:3.18
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Setting up hugepages on Nitro Enclaves node..."
+          
+          # Check current hugepages
+          echo "Current hugepages configuration:"
+          cat /proc/meminfo | grep -i huge
+          
+          # Configure hugepages (both 2Mi and 1Gi)
+          echo "Configuring hugepages..."
+          echo 1536 > /proc/sys/vm/nr_hugepages
+          echo 3 > /proc/sys/vm/nr_hugepages_1GB
+          
+          # Verify hugepages are set
+          echo "New hugepages configuration:"
+          cat /proc/meminfo | grep -i huge
+          
+          # Create hugepages mount point if it doesn't exist
+          mkdir -p /host/dev/hugepages-1Gi
+          
+          # Mount hugepages
+          mount -t hugetlbfs -o pagesize=1G none /host/dev/hugepages-1Gi || echo "Mount failed or already mounted"
+          
+          # Add to fstab for persistence
+          grep -q "hugepages-1Gi" /host/etc/fstab || echo 'none /dev/hugepages-1Gi hugetlbfs pagesize=1G 0 0' >> /host/etc/fstab
+          
+          # Update sysctl for persistence
+          grep -q "vm.nr_hugepages" /host/etc/sysctl.conf || echo 'vm.nr_hugepages = 1536' >> /host/etc/sysctl.conf
+          grep -q "vm.nr_hugepages_1GB" /host/etc/sysctl.conf || echo 'vm.nr_hugepages_1GB = 3' >> /host/etc/sysctl.conf
+          
+          # Restart kubelet to recognize hugepages
+          echo "Restarting kubelet to recognize hugepages..."
+          nsenter -t 1 -m -u -n -i systemctl restart kubelet
+          
+          echo "Hugepages setup completed!"
+          echo "Waiting for kubelet to restart..."
+          sleep 60
+          
+          echo "Checking if kubelet recognizes hugepages..."
+          echo "Final hugepages configuration:"
+          cat /proc/meminfo | grep -i huge
+          
+          echo "Setup complete. Sleeping..."
+          sleep 3600
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: host-proc
+          mountPath: /proc
+        - name: host-sys
+          mountPath: /sys
+        - name: host-dev
+          mountPath: /host/dev
+        - name: host-etc
+          mountPath: /host/etc
+        resources:
+          limits:
+            memory: 100Mi
+            cpu: 100m
+          requests:
+            memory: 50Mi
+            cpu: 50m
+      volumes:
+      - name: host-proc
+        hostPath:
+          path: /proc
+      - name: host-sys
+        hostPath:
+          path: /sys
+      - name: host-dev
+        hostPath:
+          path: /dev
+      - name: host-etc
+        hostPath:
+          path: /etc
+      restartPolicy: Always 

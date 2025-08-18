@@ -1,0 +1,126 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: signer-nitro
+  namespace: signer
+spec:
+  template:
+    metadata:
+      labels:
+        app: signer
+        enclave-type: nitro
+      annotations:
+        # Indicate this is a Nitro Enclave workload
+        edgebit.io/enclave: "nitro"
+    spec:
+      # Schedule only on Nitro Enclaves nodes
+      nodeSelector:
+        edgebit.io/enclave: nitro
+      
+      # Tolerate the Nitro Enclaves taint
+      tolerations:
+      - key: edgebit.io/enclave
+        operator: Equal
+        value: nitro
+        effect: NoSchedule
+
+      # Topology spread to ensure only one enclave per node
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            enclave-type: nitro
+
+      containers:
+      - name: enclave
+        image: docker.io/flentier/eth-go-signer:latest
+        imagePullPolicy: Always
+        
+        # Enclave-specific resource requirements
+        resources:
+          limits:
+            hugepages-2Mi: 1024Mi
+            memory: 1.5Gi
+            cpu: 1000m
+          requests:
+            hugepages-2Mi: 1024Mi
+            memory: 1.5Gi
+            cpu: 500m
+
+        # Required for Nitro Enclaves
+        securityContext:
+          privileged: true
+          runAsUser: 0
+          capabilities:
+            add:
+            - SYS_ADMIN
+            - SYS_RESOURCE
+
+        # Mount Nitro Enclaves devices and hugepages
+        volumeMounts:
+        - mountPath: /dev/nitro_enclaves
+          name: nitro-enclaves
+        - mountPath: /dev/hugepages
+          name: hugepages
+          readOnly: false
+
+        # Environment variables (matching base job configuration)
+        env:
+        - name: TO_ADDRESS
+          valueFrom:
+            configMapKeyRef:
+              name: signer-config
+              key: TO_ADDRESS
+        - name: AMOUNT_ETH
+          valueFrom:
+            configMapKeyRef:
+              name: signer-config
+              key: AMOUNT_ETH
+        - name: CHAIN_ID
+          valueFrom:
+            configMapKeyRef:
+              name: signer-config
+              key: CHAIN_ID
+        - name: KMS_KEY_ID
+          valueFrom:
+            configMapKeyRef:
+              name: signer-config
+              key: KMS_KEY_ID
+        - name: RPC_URL
+          valueFrom:
+            secretKeyRef:
+              name: rpcurl
+              key: RPC_URL
+        # Additional environment variables for Nitro Enclaves
+        - name: NITRO_ENCLAVE_ENABLED
+          value: "true"
+        - name: ENCLAVE_DEBUG
+          value: "false"
+
+      volumes:
+      - name: nitro-enclaves
+        hostPath:
+          path: /dev/nitro_enclaves
+          type: CharDevice
+      - name: hugepages
+        emptyDir:
+          medium: HugePages
+
+      restartPolicy: Never
+      
+      # Service account for IRSA
+      serviceAccountName: eth-signer
+      
+      # Docker registry credentials
+      imagePullSecrets:
+      - name: regcred
+
+  # Job completion and retry configuration
+  backoffLimit: 2
+  completions: 1
+  parallelism: 1
+  
+  # Clean up completed jobs after 1 hour
+  ttlSecondsAfterFinished: 3600 

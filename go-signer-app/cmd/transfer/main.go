@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	ethkms "github.com/welthee/go-ethereum-aws-kms-tx-signer/v2"
@@ -61,12 +62,19 @@ func main() {
 	log.Printf("KMS Key ID: %s", kmsKeyID)
 	log.Printf("RPC URL: %s", rpcURL[:min(50, len(rpcURL))]+"...") // Log only first 50 chars for security
 
-	// Initialize AWS KMS client
-	cfg, err := config.LoadDefaultConfig(context.Background())
-	if err != nil {
-		log.Fatalf("unable to load SDK config, %v", err)
+	// Check if running in Nitro Enclave (Enclaver sets AWS_KMS_ENDPOINT)
+	kmsEndpoint := os.Getenv("AWS_KMS_ENDPOINT")
+	if kmsEndpoint != "" {
+		log.Printf("🔒 Running in Nitro Enclave with KMS proxy at: %s", kmsEndpoint)
+	} else {
+		log.Printf("⚠️  Running in standard mode (no enclave)")
 	}
-	kmsClient := kms.NewFromConfig(cfg)
+
+	// Initialize AWS KMS client with Nitro Enclaves support
+	kmsClient, err := createKMSClient(kmsEndpoint)
+	if err != nil {
+		log.Fatalf("Failed to create KMS client: %v", err)
+	}
 
 	// Connect to Ethereum RPC (supports HTTP Basic Auth in URL)
 	client, err := ethclient.Dial(rpcURL)
@@ -138,7 +146,12 @@ func main() {
 		GasFeeCap: feeCap,
 	})
 
-	log.Printf("Signing transaction with KMS...")
+	if kmsEndpoint != "" {
+		log.Printf("🔒 Signing transaction with KMS via Nitro Enclave proxy...")
+	} else {
+		log.Printf("Signing transaction with KMS...")
+	}
+	
 	signedTx, err := opts.Signer(from, tx)
 	if err != nil {
 		log.Fatalf("Failed to sign transaction: %v", err)
@@ -153,6 +166,43 @@ func main() {
 	log.Printf("✅ Transaction sent successfully!")
 	log.Printf("Transaction hash: %s", signedTx.Hash().Hex())
 	log.Printf("View on Etherscan: https://sepolia.etherscan.io/tx/%s", signedTx.Hash().Hex())
+	
+	if kmsEndpoint != "" {
+		log.Printf("🔒 Transaction signed with hardware-attested Nitro Enclave")
+	}
+}
+
+// createKMSClient creates a KMS client with optional Nitro Enclaves proxy support
+func createKMSClient(kmsEndpoint string) (*kms.Client, error) {
+	ctx := context.Background()
+	
+	// Load default AWS config
+	cfg, err := config.LoadDefaultConfig(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// If running in Nitro Enclave, configure custom endpoint for KMS proxy
+	if kmsEndpoint != "" {
+		customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+			if service == kms.ServiceID {
+				return aws.Endpoint{
+					PartitionID:   "aws",
+					URL:           kmsEndpoint,
+					SigningRegion: cfg.Region,
+				}, nil
+			}
+			// For other services, return empty endpoint to use default resolution
+			return aws.Endpoint{}, nil
+		})
+		
+		cfg, err = config.LoadDefaultConfig(ctx, config.WithEndpointResolverWithOptions(customResolver))
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return kms.NewFromConfig(cfg), nil
 }
 
 // min function for Go versions that don't have it built-in
