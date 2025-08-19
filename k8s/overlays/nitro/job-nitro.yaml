@@ -93,11 +93,6 @@ spec:
             secretKeyRef:
               name: rpcurl
               key: RPC_URL
-        # Additional environment variables for Nitro Enclaves
-        - name: NITRO_ENCLAVE_ENABLED
-          value: "true"
-        - name: ENCLAVE_DEBUG
-          value: "false"
 
       volumes:
       - name: nitro-enclaves

@@ -246,7 +246,7 @@ The go signer application uses these settings (configured via Kubernetes):
 
 ### Terraform Variables
 
-Configure your infrastructure in `terraform/envs/prod/prod.tfvars`:
+Configure the infra settings in `terraform/envs/prod/prod.tfvars`:
 
 ```hcl
 aws_region = "eu-west-1"
@@ -263,22 +263,19 @@ The Nitro Enclaves integration isn't working yet. I've got the infrastructure co
 
 ### What's Missing for Production
 
-This is a demonstration project. For production use, you'd want to add:
+This is a demonstration project. For production use, you'd like to add:
 
-- Comprehensive monitoring (Prometheus/Grafana)
-- Complete CI/CD pipelines (for the iac and gitops part, as well as security checks)
-- Additional security hardening (network policies, pod security standards, IAM/RBAC, Container image signing, OPA/Kyverno policies, admission controllers, vulnerability scanning, misc supply chain security, Chainloop for attestation along with NitroEnclaves, security git repo (signing etc))
-- better iam overall security, use of OIDC for  Githubactions so that terrafrom can assume IAM roles in AWS without the need for long-term access keys
-- Zerotrust networking where it is relevant along with the use of an external IdP
-
-## Contributing
-
-This project demonstrates cloud engineering patterns. Key areas that could use work:
-
-1. Getting Nitro Enclaves fully working with EKS
-2. Adding comprehensive monitoring
-3. Implementing additional security measures as described above
-4. Creating better operational runbooks
+- Comprehensive monitoring (Prometheus/Grafana/etc)
+- Complete CICD pipelines (for the iac and gitops part, as well as security checks for like container vulnerabilities, SAST/DAST)
+- Additional security hardening (network policies, pod security standards, IAM/RBAC, Container image signing and SBOM, OPA/Kyverno policies, admission controllers, vulnerability scanning, misc supply chain security, Chainloop for attestation along with NitroEnclaves, security git repo (commit signing, etc))
+- better iam overall security, use of OIDC for  Githubactions so that terrafrom can assume IAM roles in AWS without the need for long-term AWS credentials
+- Zerotrust networking (Istio/Linkerd) if/where it is relevant
+- the use of an external IdP different than the AWS one
+- i would enhance Go app metrics and logs
+- SLO-based alerting on failed transactions and KMS errors
+- having a 'dev' env? I would use Terragrunt to ease multi-env terraform iac part
+- conduct some performance testing, cost monitoring
+- put in place disaster recovery procedures and incident response runbooks
 
 
 ---

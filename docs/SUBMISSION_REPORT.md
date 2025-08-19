@@ -56,10 +56,12 @@ This was the big challenge that didn't quite pan out. I spent a lot of time tryi
 The documentation for running Nitro Enclaves on EKS is pretty sparse. Most examples assume you're running on plain EC2 instances. which is something i've done in the past for [this project](https://github.com/katvio/acra-enclave).
 The resource requirements (hugepages, CPU allocation) add significant operational complexity.
 
-I know it is possible, just have to spend a bit o$more time on it. This part is the one that is the most interesting to me.
+I know it is possible, just have to spend a bit o$more time on it. I find this part really interesting and exciting.
 
 Enven though there is a limitation:
 *"Due to Amazon restrictions, each EC2 machine can only run a single enclave at a time. This is enforced by topologySpreadConstraints in the Deployment."*
+
+-> I will try using [Anjura.io](https://docs.anjuna.io/latest/nitro/latest/getting_started/kubernetes_tools/nitro_eks_overview.html) instead of of the Enclaver tool.
 
 
 ## What I'd Do Next

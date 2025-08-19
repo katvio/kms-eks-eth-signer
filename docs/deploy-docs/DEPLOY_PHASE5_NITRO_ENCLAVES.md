@@ -1,58 +1,21 @@
 # Phase 5 Deployment Guide - Nitro Enclaves with Enclaver
 
+🚨 This enclaver part is WIP!
+
 ## 🔒 Security Enhancement: Hardware-Level Attestation
 
-This guide enhances your existing Ethereum transaction signer with **AWS Nitro Enclaves** using **Enclaver**. This provides:
+This guide enhances your existing Ethereum transaction signer with **AWS Nitro Enclaves** using **[Enclaver](https://github.com/enclaver-io/enclaver)**. This provides:
 
 - **Hardware-level security** guarantees
 - **Cryptographic attestation** ensuring only your specific enclave can access KMS keys
 - **Zero-trust architecture** with PCR-based key policies
 - **Tamper-evident execution** environment
 
-## Architecture Overview
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        EKS Cluster                              │
-│  ┌─────────────────────────────────────────────────────────────┐│
-│  │                 Nitro Enclave Node                          ││
-│  │  ┌─────────────────────────────────────────────────────────┐││
-│  │  │              Nitro Enclave                              │││
-│  │  │  ┌─────────────────────────────────────────────────────┐│││
-│  │  │  │           Go Signer App                             ││││
-│  │  │  │  • Ethereum transaction signing                     ││││
-│  │  │  │  • KMS integration via Enclaver proxy               ││││
-│  │  │  │  • Hardware attestation                             ││││
-│  │  │  └─────────────────────────────────────────────────────┘│││
-│  │  │  ┌─────────────────────────────────────────────────────┐│││
-│  │  │  │           Enclaver Runtime                          ││││
-│  │  │  │  • KMS Proxy (localhost:9999)                      ││││
-│  │  │  │  • Attestation document generation                  ││││
-│  │  │  │  • Network isolation                                ││││
-│  │  │  └─────────────────────────────────────────────────────┘│││
-│  │  └─────────────────────────────────────────────────────────┘││
-│  │                           │                                 ││
-│  │                           │ Attested KMS Request             ││
-│  │                           ▼                                 ││
-│  └─────────────────────────────────────────────────────────────┘│
-└─────────────────────────────────────────────────────────────────┘
-                               │
-                               ▼
-    ┌─────────────────────────────────────────────────────────────┐
-    │                    AWS KMS                                  │
-    │  ┌─────────────────────────────────────────────────────────┐│
-    │  │              Ethereum Private Key                       ││
-    │  │  • Protected by PCR attestation policy                 ││
-    │  │  • Only accessible from verified enclave               ││
-    │  │  • Specific image hash (PCR0) required                 ││
-    │  │  └─────────────────────────────────────────────────────┘│
-    └─────────────────────────────────────────────────────────────┘
-```
 
 ## Prerequisites
 
 ✅ **Completed Phase 4** (Kustomize deployment working)  
-✅ **AWS Account** with admin permissions  
+✅ **AWS Account** with admin permissions for now
 ✅ **EKS cluster** running  
 ✅ **Enclaver binary** installed locally  
 ✅ **Docker** for building enclave images  
@@ -197,7 +160,7 @@ EIF Info:
   }
 }
 
-# Output will include PCR0 hash needed for KMS policy
+# We will use PCR0 hash needed for KMS policy
 ```
 
 ## Step 6: Update Kubernetes Manifests
@@ -207,7 +170,6 @@ EIF Info:
 ```bash
 # 3. Deploy the enclave workload
 cd $HOME/pro_wks/kms-eks-eth-signer
-export AGE_SECRET_KEY="$(cat ~/.age/key.txt)"
 kustomize build k8s/overlays/nitro | kubectl apply -f -
 # 4. Monitor the deployment
 kubectl -n signer logs job/nitro-signer -f
