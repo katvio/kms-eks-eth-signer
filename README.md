@@ -2,6 +2,8 @@
 
 A secure Ethereum transaction signer using AWS KMS keys deployed on Amazon EKS. This project demonstrates cloud engineering practices and explores using Nitro Enclaves in EKS (currently work in progress).
 
+A video of a little walktrough and the actual setup in action: [click here](https://www.youtube.com/watch?v=FNgz7aXvbqU).
+
 ## What This Project Does
 
 This implementation shows how to:
