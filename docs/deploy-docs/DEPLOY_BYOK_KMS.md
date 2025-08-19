@@ -30,7 +30,7 @@ aws sts get-caller-identity --profile $AWS_PROFILE
 
 ```bash
 # Navigate to temp directory
-cd /Users/cyrb/pro_wks/kms-eks-eth-signer/temp-eth-keys
+cd $HOME/pro_wks/kms-eks-eth-signer/temp-eth-keys
 
 # Generate secp256k1 private key (Ethereum compatible)
 openssl ecparam -name secp256k1 -genkey -noout -out eth-private-key.pem
@@ -191,7 +191,7 @@ export NEW_KEY_ARN=$(aws kms describe-key --key-id $NEW_KEY_ID --profile $AWS_PR
 echo "New KMS Key ARN: $NEW_KEY_ARN"
 
 # Update the KMS stack to reference the new key
-cd /Users/cyrb/pro_wks/kms-eks-eth-signer/terraform/stacks/kms
+cd $HOME/pro_wks/kms-eks-eth-signer/terraform/stacks/kms
 
 # You'll need to either:
 # Option A: Update the KMS module to output the BYOK key ARN
@@ -202,7 +202,7 @@ cd /Users/cyrb/pro_wks/kms-eks-eth-signer/terraform/stacks/kms
 
 ```bash
 # Navigate back to project root
-cd /Users/cyrb/pro_wks/kms-eks-eth-signer
+cd $HOME/pro_wks/kms-eks-eth-signer
 
 # Update ConfigMap with new KMS key ARN
 # (This will be done via file editing)
@@ -276,7 +276,7 @@ echo "TO_ADDRESS (recipient): [Your choice - any valid Ethereum address]"
 
 ```bash
 # ⚠️ ONLY run after successful KMS import and testing
-cd /Users/cyrb/pro_wks/kms-eks-eth-signer
+cd $HOME/pro_wks/kms-eks-eth-signer
 rm -rf temp-eth-keys/
 
 # Or securely backup first:
@@ -285,15 +285,6 @@ rm -rf temp-eth-keys/
 # rm eth-key-backup-$(date +%Y%m%d).tar.gz
 # rm -rf temp-eth-keys/
 ```
-
-## 🚨 Troubleshooting
-
-### Common Issues:
-
-1. **Import Token Expired**: Tokens expire after 24 hours - regenerate if needed
-2. **Wrong Key Format**: Ensure DER format conversion is correct
-3. **Encryption Issues**: Verify OpenSSL version supports required algorithms
-4. **Permissions**: Ensure your AWS profile has KMS import permissions
 
 ### Verification Commands:
 
@@ -320,15 +311,3 @@ After completing BYOK setup:
 5. Test the complete transaction flow
 
 ---
-
-**⚡ Quick Start Commands:**
-
-```bash
-# 1. Generate key
-openssl ecparam -name secp256k1 -genkey -noout -out eth-private-key.pem
-
-# 2. Create BYOK KMS key
-aws kms create-key --profile platform-admin --region eu-west-1 --key-usage SIGN_VERIFY --key-spec ECC_SECG_P256K1 --origin EXTERNAL --description "BYOK Ethereum signing key"
-
-# 3. Follow the detailed steps above for import process
-``` 

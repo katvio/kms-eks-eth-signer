@@ -63,7 +63,7 @@ This guide enhances your existing Ethereum transaction signer with **AWS Nitro E
 
 ```bash
 # Download Enclaver for your platform
-cd /Users/cyrb/pro_wks/kms-eks-eth-signer/enclaver
+cd $HOME/pro_wks/kms-eks-eth-signer/enclaver
 
 # For macOS (if not already present)
 curl -L https://github.com/edgebitio/enclaver/releases/latest/download/enclaver-darwin-amd64 -o enclaver
@@ -142,7 +142,7 @@ The KMS key policy needs to be updated to require attestation:
 ```bash
 export DOCKER_DEFAULT_PLATFORM=linux/amd64
 
-cd /Users/cyrb/pro_wks/kms-eks-eth-signer
+cd $HOME/pro_wks/kms-eks-eth-signer
 
 # Build the Go application image first
 docker build --platform linux/amd64 -t eth-go-signer:latest ./go-signer-app
@@ -167,10 +167,7 @@ docker push docker.io/flentier/eth-go-signer:enclave-$IMAGE_TAG
 
 sed -i "s/enclave-latest/enclave-20250818-175938/g" k8s/overlays/nitro/job-nitro.yaml
 
-
-
-# Build the enclave image using Enclaver
-./enclaver/enclaver build
+---
 
 # This creates: eth-go-signer:enclave-latest
 docker tag eth-go-signer:latest docker.io/flentier/eth-go-signer:latest
@@ -189,11 +186,14 @@ docker push docker.io/flentier/eth-go-signer:enclave-latest
 Built Release Image: sha256:63602c6f4dc29f6ca821992d6dbb751c2a6fc8cf2daa2fcfbc897558d4c98162 (eth-go-signer:enclave-latest)
 EIF Info:
 
+Built Release Image: sha256:531b4bea6d6132cad82664c885bd57ac434995914f080facee01168b0dfbcd92 (eth-go-signer:enclave-latest)
+EIF Info:
+
 {
   "Measurements": {
-    "PCR0": "a5063a09d6bed9b39804959929d82cd8d28d515c3f0b3a04390d5189cd8ef3221bee2d7d455de635b788a24f88fcb17f",
+    "PCR0": "4dd38643d09593282ff1dd930f26b2c4bb9f8396afb647d6235e4228a7c60892397063fb38018121e7a19cb85b573281",
     "PCR1": "3b4a7e1b5f13c5a1000b3ed32ef8995ee13e9876329f9bc72650b918329ef9cf4e2e4d1e1e37375dab0ba56ba0974d03",
-    "PCR2": "b95c541da98073f230ac166edb73cc927a0cf3dc809daca6d515f502f0124f556cf35ccd1eb571260bf098380982631c"
+    "PCR2": "6e248591c526e3d07331ddaa13525faaa247c9657e2de80dba31cfb344d6fde622bba62e89fe3fc5f008e7e9e8bacd1d"
   }
 }
 
@@ -206,7 +206,7 @@ EIF Info:
 
 ```bash
 # 3. Deploy the enclave workload
-cd /Users/cyrb/pro_wks/kms-eks-eth-signer
+cd $HOME/pro_wks/kms-eks-eth-signer
 export AGE_SECRET_KEY="$(cat ~/.age/key.txt)"
 kustomize build k8s/overlays/nitro | kubectl apply -f -
 # 4. Monitor the deployment
@@ -284,11 +284,6 @@ kubectl -n signer logs -l app=signer-nitro --tail=100
 - CloudTrail logs show exact enclave measurements
 - Immutable audit trail of key usage
 
-### 🚀 **Operational Excellence**
-- Automated deployment with Kubernetes
-- Scalable across multiple nodes
-- Integration with existing CI/CD pipelines
-
 ## Troubleshooting
 
 ### Common Issues
@@ -306,32 +301,10 @@ kubectl -n signer logs -l app=signer-nitro --tail=100
    ./enclaver/enclaver build --verbose
    ```
 
-3. **KMS Access Denied**
-   ```bash
-   # Verify PCR values match KMS policy
-   ./enclaver/enclaver describe kms-eth-signer:enclave-latest
-   ```
-
-4. **Network Connectivity Issues**
+3. **Network Connectivity Issues**
    ```bash
    # Check egress rules in enclaver.yaml
    # Verify KMS endpoints are allowed
    ```
 
-## Next Steps
-
-1. **Production Hardening**: Implement additional security controls
-2. **Multi-Region Deployment**: Extend to multiple AWS regions
-3. **Key Rotation**: Implement automated key rotation procedures
-4. **Disaster Recovery**: Set up cross-region backup and recovery
-5. **Performance Optimization**: Tune enclave memory and CPU allocation
-
-## Cost Considerations
-
-- **Nitro Enclaves nodes**: c6a.xlarge (~$0.17/hour)
-- **Enhanced security**: Justifies premium for high-value transactions
-- **Scaling**: Only run enclaves when needed (job-based execution)
-
 ---
-
-**🎉 Congratulations!** You now have a production-ready, hardware-attested Ethereum transaction signer with the highest level of security available on AWS. 

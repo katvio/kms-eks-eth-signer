@@ -28,7 +28,7 @@ kubectl get nodes
 ### Update ConfigMap with BYOK KMS Key
 
 ```bash
-cd /Users/cyrb/pro_wks/kms-eks-eth-signer
+cd $HOME/pro_wks/kms-eks-eth-signer
 
 # Update the ConfigMap with your BYOK KMS key ARN
 # Edit k8s/base/configmap.yaml
@@ -48,7 +48,7 @@ echo "IRSA Role ARN: $IRSA_ROLE_ARN"
 ## Step 2: Verify SOPS Secrets
 
 ```bash
-cd /Users/cyrb/pro_wks/kms-eks-eth-signer
+cd $HOME/pro_wks/kms-eks-eth-signer
 
 # Verify age key is available
 export AGE_SECRET_KEY="$(cat ~/.age/key.txt)"
@@ -76,7 +76,7 @@ echo "Using image tag: $IMAGE_TAG"
 ### Method A: Deploy with Current Job Name
 
 ```bash
-cd /Users/cyrb/pro_wks/kms-eks-eth-signer
+cd $HOME/pro_wks/kms-eks-eth-signer
 
 # Deploy all resources including the Job
 export AGE_SECRET_KEY="$(cat ~/.age/key.txt)"
@@ -156,16 +156,6 @@ View on Etherscan: https://sepolia.etherscan.io/tx/0x1234567890abcdef...
 export TX_HASH=$(kubectl -n signer logs job/signer | grep "Transaction hash:" | awk '{print $3}')
 echo "Transaction Hash: $TX_HASH"
 
-# Check transaction status
-curl -X POST https://rpc.sepolia.org \
-  -H "Content-Type: application/json" \
-  -d "{
-    \"jsonrpc\": \"2.0\",
-    \"method\": \"eth_getTransactionByHash\",
-    \"params\": [\"$TX_HASH\"],
-    \"id\": 1
-  }" | jq .
-
 # View on Etherscan
 echo "View transaction: https://sepolia.etherscan.io/tx/$TX_HASH"
 ```
@@ -174,13 +164,13 @@ echo "View transaction: https://sepolia.etherscan.io/tx/$TX_HASH"
 
 ```bash
 # Check CloudTrail for KMS Sign events
-cd /Users/cyrb/pro_wks/kms-eks-eth-signer
+cd $HOME/pro_wks/kms-eks-eth-signer
 
 # Set your KMS key ARN
 export NEW_KEY_ARN="arn:aws:kms:eu-west-1:905418421784:key/9f0d8cbe-4ded-480e-9400-d0cd8802048a"
 
 # Calculate timestamps for macOS (last 30 minutes)
-export START_TIME=$(python3 -c "import time; print(int((time.time() - 1800) * 1000))")
+export START_TIME=$(python3 -c "import time; print(int((time.time() - 720) * 1000))")
 export END_TIME=$(python3 -c "import time; print(int(time.time() * 1000))")
 
 # Search CloudTrail events for KMS Sign operations
@@ -212,7 +202,6 @@ export JOB_NAME="signer-$(date +%s)"
 # 2. Deploy and execute
 kustomize build k8s/overlays/prod \
   | sed "s/name: signer/name: ${JOB_NAME}/" \
-  | sops -d /dev/stdin \
   | kubectl apply -f -
 
 # 3. Monitor

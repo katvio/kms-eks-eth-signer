@@ -145,7 +145,7 @@ kms-eks-eth-signer/
 
 ## Phase 2 — Build & push the app (Docker Hub)
 
-cd /Users/cyrb/pro_wks/kms-eks-eth-signer/app
+cd $HOME/pro_wks/kms-eks-eth-signer/app
 
 # Build for x86_64 (AMD64) architecture specifically
 docker buildx build --platform linux/amd64 -t docker.io/flentier/eth-go-signer:amd64 .
@@ -196,25 +196,6 @@ docker push docker.io/flentier/eth-go-signer:amd64
      ```
 
 **Expected logs:** derived sender address (from KMS pubkey) and a tx hash after broadcast.
-
----
-
-## Phase 5 — CI/CD (minimal but solid)
-
-- **CI (`ci.yaml`)**
-  - Go: `go vet` + `go test`
-  - Docker: build & push to Docker Hub tagged with `${{ github.sha }}`
-  - Terraform hygiene: `fmt -check` (+ optional `tflint`, `tfsec`)
-- **CD (`cd.yaml`)**
-  - Assume AWS deploy role via **OIDC**.
-  - For each stack (`vpc`, `eks`, `kms`, `irsa`): `terraform init -reconfigure` with that stack’s **key** → `terraform apply` with `dev.tfvars`.
-  - Update kubeconfig; deploy with Kustomize + SOPS:
-    ```bash
-    kustomize build k8s/overlays/prod | kubectl apply -f -
-    ```
-  - Image pinning: set overlay image tag to `${{ github.sha }}` before apply.
-
-**GitHub Secrets required:** `AWS_ROLE_TO_ASSUME`, `AWS_REGION`, `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`, `AGE_SECRET_KEY`.
 
 ---
 
