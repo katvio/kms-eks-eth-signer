@@ -35,7 +35,7 @@ spec:
 
       containers:
       - name: enclave
-        image: docker.io/flentier/eth-go-signer:latest
+        image: docker.io/flentier/eth-go-signer:enclave-4ecc312
         imagePullPolicy: Always
         
         # Enclave-specific resource requirements

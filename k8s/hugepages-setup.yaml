@@ -39,6 +39,15 @@ spec:
           echo 1536 > /proc/sys/vm/nr_hugepages
           echo 3 > /proc/sys/vm/nr_hugepages_1GB
           
+          # Configure Nitro Enclaves allocator for CPU
+          echo "Configuring Nitro Enclaves CPU allocation..."
+          nsenter -t 1 -m -u -n -i sed -i 's/cpu_count: 0/cpu_count: 2/g' /etc/nitro_enclaves/allocator.yaml
+          nsenter -t 1 -m -u -n -i sed -i 's/cpu_count: 1/cpu_count: 2/g' /etc/nitro_enclaves/allocator.yaml
+          
+          # Restart nitro-enclaves-allocator to apply CPU changes
+          echo "Restarting Nitro Enclaves allocator..."
+          nsenter -t 1 -m -u -n -i systemctl restart nitro-enclaves-allocator.service
+          
           # Verify hugepages are set
           echo "New hugepages configuration:"
           cat /proc/meminfo | grep -i huge

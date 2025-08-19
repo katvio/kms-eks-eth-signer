@@ -1,0 +1,119 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nitro-enclaves-installer
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      name: nitro-enclaves-installer
+  template:
+    metadata:
+      labels:
+        name: nitro-enclaves-installer
+    spec:
+      nodeSelector:
+        edgebit.io/enclave: nitro
+      tolerations:
+      - key: edgebit.io/enclave
+        operator: Equal
+        value: nitro
+        effect: NoSchedule
+      hostPID: true
+      hostNetwork: true
+      containers:
+      - name: installer
+        image: alpine:3.18
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "=== Nitro Enclaves Complete Installation ==="
+          
+          # Install nsenter in the container
+          apk add --no-cache util-linux
+          
+          # Use nsenter to run commands in host namespace
+          NSENTER="nsenter -t 1 -m -u -n -i"
+          
+          echo "Step 1: Installing Nitro Enclaves CLI..."
+          $NSENTER amazon-linux-extras install aws-nitro-enclaves-cli -y || echo "Installation attempt completed"
+          $NSENTER yum install aws-nitro-enclaves-cli-devel -y || echo "Dev tools installation attempt completed"
+          
+          echo "Step 2: Configuring users..."
+          $NSENTER usermod -aG ne ec2-user || echo "User modification completed"
+          $NSENTER usermod -aG docker ec2-user || echo "Docker group modification completed"
+          
+          echo "Step 3: Creating Nitro Enclaves allocator configuration..."
+          $NSENTER mkdir -p /etc/nitro_enclaves
+          
+          # Create allocator.yaml
+          $NSENTER tee /etc/nitro_enclaves/allocator.yaml > /dev/null << 'EOF'
+          # Enclave configuration
+          # memory_mib: Allocates memory for the enclave.
+          memory_mib: 2048
+          
+          # cpu_count: Allocates CPUs for the enclave.
+          # On a system with 4 vCPUs, setting this to 2 leaves 2 vCPUs for the parent.
+          cpu_count: 2
+          EOF
+          
+          echo "Step 4: Checking if Nitro Enclaves CLI is available..."
+          $NSENTER which nitro-cli || echo "nitro-cli not found in PATH"
+          $NSENTER ls -la /usr/bin/nitro-cli || echo "nitro-cli binary not found"
+          
+          echo "Step 5: Starting Nitro Enclaves services..."
+          $NSENTER systemctl enable nitro-enclaves-allocator.service || echo "Enable failed - service may not exist"
+          $NSENTER systemctl start nitro-enclaves-allocator.service || echo "Start failed - service may not exist"
+          
+          echo "Step 6: Checking service status..."
+          $NSENTER systemctl status nitro-enclaves-allocator.service || echo "Service not found or not running"
+          
+          echo "Step 7: Configuring hugepages..."
+          echo 1536 > /proc/sys/vm/nr_hugepages
+          
+          # Create hugepages mount point
+          $NSENTER mkdir -p /dev/hugepages-1Gi
+          $NSENTER mount -t hugetlbfs -o pagesize=1G none /dev/hugepages-1Gi || echo "Mount attempt completed"
+          
+          echo "Step 8: Checking final configuration..."
+          echo "Allocator config file:"
+          $NSENTER cat /etc/nitro_enclaves/allocator.yaml || echo "Config file not found"
+          
+          echo "Available services:"
+          $NSENTER systemctl list-unit-files | grep nitro || echo "No nitro services found"
+          
+          echo "Hugepages status:"
+          cat /proc/meminfo | grep -i huge
+          
+          echo "=== Diagnostic Complete ==="
+          echo "The node may need the Nitro Enclaves CLI to be properly installed via user data or AMI."
+          echo "Sleeping to keep container running..."
+          sleep 3600
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: host-proc
+          mountPath: /proc
+        - name: host-sys
+          mountPath: /sys
+        - name: host-root
+          mountPath: /host
+        resources:
+          limits:
+            memory: 200Mi
+            cpu: 200m
+          requests:
+            memory: 100Mi
+            cpu: 100m
+      volumes:
+      - name: host-proc
+        hostPath:
+          path: /proc
+      - name: host-sys
+        hostPath:
+          path: /sys
+      - name: host-root
+        hostPath:
+          path: /
+      restartPolicy: Always 

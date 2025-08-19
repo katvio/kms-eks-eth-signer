@@ -22,5 +22,5 @@ egress:
     - ethereum-sepolia.core.chainstack.com
 # Default resource allocation (can be overridden in Kubernetes)
 defaults:
-  memory_mb: 1024  # 1GB memory (minimum 512MB)
+  memory_mb: 512   # 512MB memory (minimum for basic operation)
   cpu_count: 1     # Single CPU core 
